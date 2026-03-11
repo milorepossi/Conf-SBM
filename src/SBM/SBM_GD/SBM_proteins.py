@@ -76,7 +76,7 @@ def ParseOptions(options):
 def Init_options(options,align):
     options=ParseOptions(options)
 
-    options['q'] = np.max(align) + 1
+    options['q'] = np.max(align) 
     options['L'] = align.shape[1]
 
     ############# SEED #############
