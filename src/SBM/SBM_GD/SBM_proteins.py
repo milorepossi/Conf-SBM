@@ -76,7 +76,7 @@ def ParseOptions(options):
 def Init_options(options,align):
     options=ParseOptions(options)
 
-    options['q'] = np.max(align) 
+    options['q'] = np.max(align) + 1
     options['L'] = align.shape[1]
 
     ############# SEED #############
@@ -135,6 +135,8 @@ def Init_statistics(options,train_align):
     if options['Weights'] is None:
         W,N_eff=ut.CalcWeights(train_align,options['theta'])
     else:
+        print(len(options['Weights']))
+        print(train_align.shape[0])
         assert len(options['Weights'])==train_align.shape[0]
         W = options['Weights']
         N_eff = np.sum(W)
