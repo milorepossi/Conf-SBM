@@ -1,0 +1,12 @@
+.envrc
+.direnv/nix-profile-25.11-99f9ksfwybf3naav
+.direnv/nix-profile-25.11-99f9ksfwybf3naav.rc
+.direnv/bin/nix-direnv-reload
+shell.nix
+src/SBM/utils/__pycache__/
+data/
+cmake/
+.direnv/
+env_SBM/
+results/
+shell.nix

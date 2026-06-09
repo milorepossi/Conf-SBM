@@ -28,7 +28,7 @@ def ParseOptions(options):
         ('PseudoCount',False), # the default pseudo count is 1/Neff
 
         ('alpha',0.2),  #Learning rate for the BM method
-        ('Learning_rate',None),
+        ('LearningRate',None),
 
         ('lambda_h', 0),   # regularization for the fields
         ('lambda_J', 0),    # regularization for the couplings
@@ -40,7 +40,7 @@ def ParseOptions(options):
         ('Pruning Mask Couplings', None),
         ('Infinite Mask Fields',None), # To forbid certain a.a at certain positions
         
-        ('Param_init', 'profile'), # Zero, Profile, Custom
+        ('Param_init', 'zero'), # Zero, Profile, Custom
 
         ('Test/Train', True), #If True and 'Train sequences' is None: the MSA is randomly splitted in a 80% training set / 20% test set
         ('Train sequences',None), #indices of sequences used for training
@@ -129,11 +129,15 @@ def Init_SGD(options,train_align):
     return align_subsamp
 
 def Init_statistics(options,train_align):
-
+    '''
+    In the CONF version of the Boltzmann Machine we don't want to compute weights
+    as the equivalent of 'phylogeny is exactly what we want to preserve when studying conformational changes.
+    '''
     ###### EVALUATE GOAL STATS #####
     print('Compute the statistics from the database....')
     if options['Weights'] is None:
-        W,N_eff=ut.CalcWeights(train_align,options['theta'])
+        W = np.ones(train_align.shape[0])
+        N_eff = train_align.shape[0]
     else:
         print(len(options['Weights']))
         print(train_align.shape[0])
@@ -237,6 +241,8 @@ def SBM(align,options,J0 = None,h0 = None):
     f=lambda x: GradLogLike(x,lamJ,lamh,fi,fij,options,align_subsamp=align_subsamp)
     ################################
     
+    print('about to start GD...')
+
     ####### GRADIENT DESCENT #######
     Ex_time=time.time()
     w,output=Minimizer(f,w0,options)
@@ -300,6 +306,7 @@ def GradLogLike(w,lambdaJ,lambdah,fi,fij,options,align_subsamp=None):
     if options['Zero Couplings']:gradJ=None
 
     grad=ut.Wj(gradJ,gradh)
+    print(np.linalg.norm(grad))
     return grad
 
 ##########################################################
@@ -332,8 +339,7 @@ def Minimizer(fun,x0,options):
         
         ########## BM METHOD ###########
         else:
-            if options['Learning_rate'] is not None: t = options['Learning_rate'][i]
-            else:t = 1/((i+1)**options['alpha'])
+            if options['LearningRate'] is not None: t = options['LearningRate']
             grad = fun(x)
             x -= t*grad
         ################################

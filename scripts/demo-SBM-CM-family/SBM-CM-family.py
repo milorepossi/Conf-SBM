@@ -18,7 +18,7 @@ results_dir = ROOT / "results"
 
 ##########################################################
 
-def run_SBM(Input_MSA,Weights, fam,Model,train_file,N_iter, m, N_chains_list,Nb_rep,Nb_av,k_MCMC,TestTrain,ParamInit,lambdJ,lambdh):
+def run_SBM(Input_MSA,Weights, fam,Model,train_file,N_iter, m, N_chains_list,Nb_rep,Nb_av,k_MCMC,TestTrain,ParamInit,lambdJ,lambdh,LearningRate):
     fam = str(fam)
     
     for rep in range(Nb_rep):
@@ -43,8 +43,9 @@ def run_SBM(Input_MSA,Weights, fam,Model,train_file,N_iter, m, N_chains_list,Nb_
                                 ('lambda_h', lambdh), ('lambda_J', lambdJ),
                                 ('Pruning', False), ('Pruning Mask', None),
                                 ('Param_init', ParamInit),
+                                ('LearningRate' , LearningRate),
                                 ('Test/Train', TestTrain==1), ('Train sequences', ind_train),
-                                ('Weights', np.load(str(Weights))), ('SGD', None),
+                                ('Weights', None), ('SGD', None),
                                 ('Seed', None), ('Zero Fields', False), 
                                 ('Store Parameters', None)])
 
@@ -128,10 +129,12 @@ if __name__ == "__main__":
     parser.add_argument('--lambdh', type=float, default=0, help='lambda h')
     parser.add_argument('--Weights')
     parser.add_argument('--Input_MSA')
+    parser.add_argument('--LearningRate' , type=float, default=1e-3, help = 'Fixed Learning Rate')
+
 
     args = parser.parse_args()
     run_SBM(args.Input_MSA, args.Weights , args.fam,args.mod,args.train_file,args.N_iter, 
             args.m, args.N_chains,args.rep,args.N_av,args.k_MCMC,args.TestTrain,
-            args.ParamInit,args.lambdJ,args.lambdh)
+            args.ParamInit,args.lambdJ,args.lambdh,args.LearningRate)
     
 

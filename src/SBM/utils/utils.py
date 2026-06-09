@@ -236,39 +236,53 @@ def CalcWeights(align,theta):
 	N_eff=sum(W)
 	return W,N_eff
 
-def CalcStatsWeighted(q,MSA,p=None):
-	"""
-	Function to calculate the statistics of a given weighted multiple sequence alignment,
-	including the frequencies and pairwise frequencies.
+def CalcStatsWeighted(q, MSA, p=None):
+    """
+    Function to calculate the statistics of a given weighted multiple sequence alignment,
+    including the frequencies and pairwise frequencies.
 
-	Parameters:
-	q : int
-		The number of amino acids.
-	MSA : numpy array
-		A 2D numpy array representing the Multiple Sequence Alignment.
-	p : numpy array
-		An array representing the weights. If None, it is set to an array of equal weights.
+    Parameters:
+    q : int
+        The number of amino acids.
+    MSA : numpy array
+        A 2D numpy array representing the Multiple Sequence Alignment.
+    p : numpy array
+        An array representing the weights. If None, it is set to an array of equal weights.
 
-	Returns:
-	fi : numpy array
-		A 2D numpy array with the calculated frequencies.
-	fij : numpy array
-		A 4D numpy array with the pairwise frequencies.
-	"""
-	if p is None:
-		p= np.zeros(MSA.shape[0])+1/MSA.shape[0]
-	L=MSA.shape[1]  
-	fi=np.zeros([L,q])
-	x=np.array([i for i in range(L)])
-	for m in range(MSA.shape[0]):
-		fi[x[:],MSA[m,x[:]]]+= p[m]
+    Returns:
+    fi : numpy array
+        A 2D numpy array with the calculated frequencies.
+    fij : numpy array
+        A 4D numpy array with the pairwise frequencies.
+    """
+    if p is None:
+        p = np.zeros(MSA.shape[0]) + 1 / MSA.shape[0]
 
-	fij=np.zeros([L,L,q,q])
-	x=np.array([[i,j] for i,j in it.product(range(L),range(L))])
-			
-	for m in range(MSA.shape[0]):
-		fij[x[:,0],x[:,1],MSA[m,x[:,0]],MSA[m,x[:,1]]]+=p[m]
-	return fi,fij
+    L = MSA.shape[1]
+    fi = np.zeros([L, q])
+    x = np.array([i for i in range(L)])
+
+    total_seq = MSA.shape[0]
+    print("Computing single-site frequencies...")
+    for m in range(total_seq):
+        fi[x[:], MSA[m, x[:]]] += p[m]
+        if (m + 1) % max(1, total_seq // 100) == 0 or (m + 1) == total_seq:
+            pct = (m + 1) / total_seq * 100
+            print(f"\r  Progress: {pct:.1f}% ({m + 1}/{total_seq} sequences)", end="", flush=True)
+    print()  # newline after progress
+
+    fij = np.zeros([L, L, q, q])
+    x = np.array([[i, j] for i, j in it.product(range(L), range(L))])
+
+    print("Computing pairwise frequencies...")
+    for m in range(total_seq):
+        fij[x[:, 0], x[:, 1], MSA[m, x[:, 0]], MSA[m, x[:, 1]]] += p[m]
+        if (m + 1) % max(1, total_seq // 100) == 0 or (m + 1) == total_seq:
+            pct = (m + 1) / total_seq * 100
+            print(f"\r  Progress: {pct:.1f}% ({m + 1}/{total_seq} sequences)", end="", flush=True)
+    print()  # newline after progress
+
+    return fi, fij
 
 def CalcThreeCorrWeighted(MSA,fi,fij,p=None,ind_L = None):
 	"""
