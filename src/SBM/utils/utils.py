@@ -95,9 +95,9 @@ def save_fasta_from_array(Model_file, fasta_file,Nb_seq=100):
 
 ##########################################################
 
-####################### CREATE ARTICIAL ALIGNEMENT #######################
+####################### CREATE ARTICIAL ALIGNEMENT ######################
 
-def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1):
+def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1, training_set=None):
 	"""
 	Function to create a alignment based on the provided parameters
 	using the C_MonteCarlo module implemented in cython
@@ -126,7 +126,12 @@ def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1):
 		L,q = J.shape[0],J.shape[2]
 	else: J=None
 	w = np.array(Wj(J,h))
-	states = np.random.randint(q,size=(N,L)).astype('int32')
+
+	#initializing chains at random in the training dataset
+	M = training_set.shape[0]
+	print('M is equl to',M)
+	idx = np.random.choice(np.arange(1,M), N)
+	states = np.ascontiguousarray(training_set[idx, :], dtype=np.int32)
 	if J is None: mcp.MC(w,states,int(delta_t),int(q))
 	else: mc.MC(w,states,int(delta_t),int(q))
 	MSA = np.copy(states)
@@ -268,8 +273,6 @@ def CalcStatsWeighted(q, MSA, p=None):
         fi[x[:], MSA[m, x[:]]] += p[m]
         if (m + 1) % max(1, total_seq // 100) == 0 or (m + 1) == total_seq:
             pct = (m + 1) / total_seq * 100
-            print(f"\r  Progress: {pct:.1f}% ({m + 1}/{total_seq} sequences)", end="", flush=True)
-    print()  # newline after progress
 
     fij = np.zeros([L, L, q, q])
     x = np.array([[i, j] for i, j in it.product(range(L), range(L))])
@@ -279,8 +282,6 @@ def CalcStatsWeighted(q, MSA, p=None):
         fij[x[:, 0], x[:, 1], MSA[m, x[:, 0]], MSA[m, x[:, 1]]] += p[m]
         if (m + 1) % max(1, total_seq // 100) == 0 or (m + 1) == total_seq:
             pct = (m + 1) / total_seq * 100
-            print(f"\r  Progress: {pct:.1f}% ({m + 1}/{total_seq} sequences)", end="", flush=True)
-    print()  # newline after progress
 
     return fi, fij
 
