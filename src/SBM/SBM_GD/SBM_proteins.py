@@ -40,7 +40,7 @@ def ParseOptions(options):
         ('Pruning Mask Couplings', None),
         ('Infinite Mask Fields',None), # To forbid certain a.a at certain positions
         
-        ('Param_init', 'zero'), # Zero, Profile, Custom
+        ('Param_init', 'Profile'), # Zero, Profile, Custom
 
         ('Test/Train', True), #If True and 'Train sequences' is None: the MSA is randomly splitted in a 80% training set / 20% test set
         ('Train sequences',None), #indices of sequences used for training
@@ -51,6 +51,8 @@ def ParseOptions(options):
         ('Shuffle Columns',False),
 
         ('SGD',None), #for classic stochastic gradient descent
+
+        ('PCD',False), # True: persistent chains, each MCMC starts from the previous chains' final states
 
         ('Seed',None),
 
@@ -238,7 +240,8 @@ def SBM(align,options,J0 = None,h0 = None):
     
     ###### OBJECTIVE FUNCTION ######
     lamJ, lamh = options['lambda_J'], options['lambda_h']
-    f=lambda x: GradLogLike(x,lamJ,lamh,fi,fij,options,align_subsamp=align_subsamp)
+    chains = {'states':None} # persistent chains (only used if options['PCD'])
+    f=lambda x: GradLogLike(x,lamJ,lamh,fi,fij,options,align_subsamp=align_subsamp,align=train_align,chains=chains)
     ################################
     
     print('about to start GD...')
@@ -248,6 +251,7 @@ def SBM(align,options,J0 = None,h0 = None):
     w,output=Minimizer(f,w0,options)
     output['Execution time'] = time.time()-Ex_time
     print('Execution time: ',time.time()-Ex_time)
+    output['Chains'] = chains['states'] # final persistent chains (None if not PCD)
     ################################
 
     output['options'] = options
@@ -265,14 +269,16 @@ def SBM(align,options,J0 = None,h0 = None):
     
     return output
 
-def GradLogLike(w,lambdaJ,lambdah,fi,fij,options,align_subsamp=None):
+def GradLogLike(w,lambdaJ,lambdah,fi,fij,options,align_subsamp=None,align=None,chains=None):
     if options['Zero Couplings']: J,h=ut.Jw(w,options['q'],Couplings=False)
     else: J,h=ut.Jw(w,options['q'])
-    
+
     ########## MODEL STATS #########
     if options['Zero Fields']:h*=0
 
-    align_mod=ut.Create_modAlign({'J':J,'h':h},options['N_chains'],delta_t = options['k_MCMC'])
+    init_states = chains['states'] if options['PCD'] else None
+    align_mod=ut.Create_modAlign({'J':J,'h':h},options['N_chains'],delta_t = options['k_MCMC'],training_set = align,init_states = init_states)
+    if options['PCD']: chains['states'] = align_mod
     p=np.zeros(options['N_chains'])+1/options['N_chains']
     fi_mod,fij_mod=ut.CalcStatsWeighted(options['q'],align_mod,p)
     ################################

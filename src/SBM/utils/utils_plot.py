@@ -6,6 +6,7 @@
 
 ####################### MODULES #######################
 
+import os
 import numpy as np #type: ignore
 import matplotlib.pyplot as plt #type: ignore
 import SBM.utils.utils as ut
@@ -17,7 +18,7 @@ from matplotlib import cm #type: ignore
 
 ####################### PLOT STATISTICS #######################
 
-def plot_stats(output,Stats,plot = 'Freq',ma=None):
+def plot_stats(output,Stats,plot = 'Freq',ma=None,save_dir='results/pics'):
 	if plot=='Freq':
 		if ma is None: ma = 1
 		fig = plt.figure(figsize = (12,4))
@@ -46,7 +47,7 @@ def plot_stats(output,Stats,plot = 'Freq',ma=None):
 		plt.title('Train VS Test')
 
 		fig.tight_layout()
-		plt.savefig('results/pics/natural_sequences_Freq.png', dpi=150, bbox_inches='tight')
+		plt.savefig(os.path.join(save_dir,'natural_sequences_Freq.png'), dpi=150, bbox_inches='tight')
 	
 	if plot=='Pair_freq':
 		BINS = 40
@@ -80,7 +81,7 @@ def plot_stats(output,Stats,plot = 'Freq',ma=None):
 		plt.title('Train VS Test')
 
 		fig.tight_layout()
-		plt.savefig('results/pics/natural_sequences_Pair_Freq.png', dpi=150, bbox_inches='tight')
+		plt.savefig(os.path.join(save_dir,'natural_sequences_Pair_Freq.png'), dpi=150, bbox_inches='tight')
 
 	if plot=='Corr3':
 		if ma is None: ma = 0.1
@@ -141,7 +142,7 @@ def plot_stats(output,Stats,plot = 'Freq',ma=None):
 		plt.title('Natural sequences',**axis_font)
 		plt.grid(color='gray',linestyle=(0, (5, 10)))
 		plt.gca().spines[['right', 'top','left','bottom']].set_visible(False)
-		plt.savefig('results/pics/natural_sequences_PCA.png', dpi=150, bbox_inches='tight') 
+		plt.savefig(os.path.join(save_dir,'natural_sequences_PCA.png'), dpi=150, bbox_inches='tight') 
 		
 		density_scatter(X_mod[:,0],X_mod[:,1],Max=Max,markersize=18)
 		plt.xlim([mi1,ma1])
@@ -151,7 +152,7 @@ def plot_stats(output,Stats,plot = 'Freq',ma=None):
 		plt.title('Artificial sequences',**axis_font)
 		plt.grid(color='gray',linestyle=(0, (5, 10)))
 		plt.gca().spines[['right', 'top','left','bottom']].set_visible(False)
-		plt.savefig('results/pics/artificial_sequences_PCA.png', dpi=150, bbox_inches='tight')
+		plt.savefig(os.path.join(save_dir,'artificial_sequences_PCA.png'), dpi=150, bbox_inches='tight')
 
 	if plot=='Energy':
 		fig = plt.figure(figsize = (8,4))

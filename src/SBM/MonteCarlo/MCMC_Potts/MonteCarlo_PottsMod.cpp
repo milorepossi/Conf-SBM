@@ -29,7 +29,8 @@ PyObject* MC(PyObject*,PyObject* args) {
     const int L = PyArray_DIM(StatesO, 1);
     const double* w = (double*) PyArray_DATA(wO);
     int* States = (int*) PyArray_DATA(StatesO);
-	const unsigned int seed0 = std::random_device{}();
+    const unsigned int seed0 = time(nullptr);
+
     omp_set_num_threads(50);
     #pragma omp parallel
     {

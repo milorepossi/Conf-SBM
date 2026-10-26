@@ -97,7 +97,7 @@ def save_fasta_from_array(Model_file, fasta_file,Nb_seq=100):
 
 ####################### CREATE ARTICIAL ALIGNEMENT ######################
 
-def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1, training_set=None):
+def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1, training_set=None, init_states=None):
 	"""
 	Function to create a alignment based on the provided parameters
 	using the C_MonteCarlo module implemented in cython
@@ -109,6 +109,8 @@ def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1, training_set=
 	- ITER (str): Optional parameter (if several 'h' and 'J' values are stored in the output dictionary
 	we can choose 'h' and 'J' values at a specific iteration)
     - temperature (float): Optional parameter to specify the temperature at which sampling should proceed
+	- training_set (numpy.array): chains are initialized on random sequences of this set
+	- init_states (numpy.array): if not None, chains are initialized on these states (N x L), e.g. for PCD
 
 	Returns:
 	- numpy.array: A 2D numpy array with the created alignment.
@@ -127,11 +129,15 @@ def Create_modAlign(output,N,delta_t = None,ITER='',temperature=1, training_set=
 	else: J=None
 	w = np.array(Wj(J,h))
 
-	#initializing chains at random in the training dataset
-	M = training_set.shape[0]
-	print('M is equl to',M)
-	idx = np.random.choice(np.arange(1,M), N)
-	states = np.ascontiguousarray(training_set[idx, :], dtype=np.int32)
+	if init_states is not None:
+		#initializing chains on the provided states (persistent chains)
+		assert init_states.shape[0]==N
+		states = np.ascontiguousarray(init_states, dtype=np.int32)
+	else:
+		#initializing chains at random in the training dataset
+		M = training_set.shape[0]
+		idx = np.random.choice(M, N)
+		states = np.ascontiguousarray(training_set[idx, :], dtype=np.int32)
 	if J is None: mcp.MC(w,states,int(delta_t),int(q))
 	else: mc.MC(w,states,int(delta_t),int(q))
 	MSA = np.copy(states)
@@ -235,6 +241,9 @@ def CalcWeights(align,theta):
 	N_eff : float
 		The effective count derived from the sum of weights.
 	"""
+	if theta<=0:
+		# no reweighting: skip the (N x N) distance matrix
+		return np.ones(align.shape[0]),float(align.shape[0])
 	#W = 1/np.max(1,(np.sum(squareform(pdist(align, 'hamming'))<theta,axis=0)))
 	counts = np.sum(squareform(compute_diversity(align))<theta,axis=0)
 	W = 1/(counts + (counts==0).astype('int'))
